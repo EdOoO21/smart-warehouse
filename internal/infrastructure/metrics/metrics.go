@@ -11,6 +11,7 @@ import (
 type Registry struct {
 	mu              sync.RWMutex
 	processed       map[string]uint64
+	failed          map[string]uint64
 	writeErrors     uint64
 	durationBuckets map[float64]uint64
 	durationSum     float64
@@ -21,6 +22,7 @@ type Registry struct {
 func New() *Registry {
 	return &Registry{
 		processed: map[string]uint64{},
+		failed:    map[string]uint64{},
 		durationBuckets: map[float64]uint64{
 			0.005: 0, 0.01: 0, 0.025: 0, 0.05: 0, 0.1: 0, 0.25: 0, 0.5: 0, 1: 0, 2.5: 0, 5: 0, 10: 0,
 		},
@@ -32,6 +34,12 @@ func (r *Registry) IncProcessed(eventType string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.processed[eventType]++
+}
+
+func (r *Registry) IncFailed(errorCode string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.failed[errorCode]++
 }
 
 func (r *Registry) ObserveDuration(seconds float64) {
@@ -76,6 +84,15 @@ func (r *Registry) Handler() http.Handler {
 		sort.Strings(eventTypes)
 		for _, eventType := range eventTypes {
 			fmt.Fprintf(&b, "events_processed_total{event_type=%q} %d\n", eventType, r.processed[eventType])
+		}
+		b.WriteString("# TYPE events_failed_total counter\n")
+		errorCodes := make([]string, 0, len(r.failed))
+		for errorCode := range r.failed {
+			errorCodes = append(errorCodes, errorCode)
+		}
+		sort.Strings(errorCodes)
+		for _, errorCode := range errorCodes {
+			fmt.Fprintf(&b, "events_failed_total{error_code=%q} %d\n", errorCode, r.failed[errorCode])
 		}
 		b.WriteString("# TYPE event_processing_duration_seconds histogram\n")
 		buckets := make([]float64, 0, len(r.durationBuckets))

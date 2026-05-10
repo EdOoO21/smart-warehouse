@@ -57,8 +57,10 @@ func (c *Consumer) Run(ctx context.Context) error {
 		case warehouse.IsSkippable(err):
 			c.logger.Info("warehouse event skipped", "event_id", event.EventID, "event_type", event.EventType, "partition", msg.Partition, "offset", msg.Offset, "reason", err.Error())
 		default:
+			code := errorCode(err)
+			c.metrics.IncFailed(code)
 			c.logger.Error("warehouse event failed, sending to dlq", "partition", msg.Partition, "offset", msg.Offset, "error", err)
-			if dlqErr := c.dlq.Publish(ctx, msg.Value, err.Error(), errorCode(err), msg.Partition, msg.Offset); dlqErr != nil {
+			if dlqErr := c.dlq.Publish(ctx, msg.Value, err.Error(), code, msg.Partition, msg.Offset); dlqErr != nil {
 				c.logger.Error("failed to publish dlq event", "partition", msg.Partition, "offset", msg.Offset, "error", dlqErr)
 				continue
 			}

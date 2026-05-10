@@ -62,7 +62,7 @@ func (c *Client) SetCompatibility(ctx context.Context, subject, compatibility st
 }
 
 func (c *Client) SchemaByID(ctx context.Context, id int) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/schemas/ids/%d", c.baseURL, id), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/ç/ids/%d", c.baseURL, id), nil)
 	if err != nil {
 		return "", err
 	}

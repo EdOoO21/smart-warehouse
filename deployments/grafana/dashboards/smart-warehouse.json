@@ -22,10 +22,13 @@
     },
     {
       "type": "timeseries",
-      "title": "Cassandra write errors",
+      "title": "Processing and Cassandra errors",
       "id": 3,
       "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
-      "targets": [{"expr": "rate(cassandra_write_errors_total[1m])", "legendFormat": "write errors/sec"}]
+      "targets": [
+        {"expr": "sum by (error_code) (rate(events_failed_total[1m]))", "legendFormat": "dlq {{error_code}}"},
+        {"expr": "rate(cassandra_write_errors_total[1m])", "legendFormat": "cassandra write errors/sec"}
+      ]
     }
   ]
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"smart-warehouse/internal/application/warehouse"
+	"smart-warehouse/internal/application/wms"
 	cassandrainfra "smart-warehouse/internal/infrastructure/cassandra"
 	"smart-warehouse/internal/infrastructure/config"
 	"smart-warehouse/internal/infrastructure/httpserver"
@@ -93,6 +94,12 @@ func runProducer(ctx context.Context, log *slog.Logger, cfg config.Config, codec
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = server.Shutdown(shutdownCtx)
+	}()
+	generator := wms.NewGenerator(log, producer, cfg.ProducerInterval)
+	go func() {
+		if err := generator.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
+			log.Error("event generator stopped", "error", err)
+		}
 	}()
 	log.Info("producer started", "http_addr", cfg.HTTPAddr)
 	return server.Run()

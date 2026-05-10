@@ -60,7 +60,7 @@ func NewDLQProducer(brokers []string, topic string) *DLQProducer {
 }
 
 func (p *DLQProducer) Publish(ctx context.Context, original []byte, reason, code string, partition int, offset int64) error {
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"original_event": base64.StdEncoding.EncodeToString(original),
 		"error_reason":   reason,
 		"error_code":     code,
