@@ -1,0 +1,31 @@
+{
+  "uid": "smart-warehouse",
+  "title": "Smart Warehouse Consumer",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Consumer lag by partition",
+      "id": 1,
+      "gridPos": {"x": 0, "y": 0, "w": 24, "h": 8},
+      "targets": [{"expr": "consumer_lag", "legendFormat": "partition {{partition}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Throughput events/sec",
+      "id": 2,
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "sum by (event_type) (rate(events_processed_total[1m]))", "legendFormat": "{{event_type}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Cassandra write errors",
+      "id": 3,
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "rate(cassandra_write_errors_total[1m])", "legendFormat": "write errors/sec"}]
+    }
+  ]
+}
