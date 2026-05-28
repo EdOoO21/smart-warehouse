@@ -1,34 +1,60 @@
 {
-  "uid": "smart-warehouse",
-  "title": "Smart Warehouse Consumer",
+  "uid": "smart-warehouse-services",
+  "title": "Smart Warehouse Services",
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "5s",
   "panels": [
     {
       "type": "timeseries",
-      "title": "Consumer lag by partition",
+      "title": "Consumer p50/p95/p99 latency",
       "id": 1,
-      "gridPos": {"x": 0, "y": 0, "w": 24, "h": 8},
-      "targets": [{"expr": "consumer_lag", "legendFormat": "partition {{partition}}"}]
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.50, sum by (le, endpoint) (rate(http_request_duration_seconds_bucket{job=\"smart-warehouse-consumer\"}[1m])))", "legendFormat": "p50 {{endpoint}}"},
+        {"expr": "histogram_quantile(0.95, sum by (le, endpoint) (rate(http_request_duration_seconds_bucket{job=\"smart-warehouse-consumer\"}[1m])))", "legendFormat": "p95 {{endpoint}}"},
+        {"expr": "histogram_quantile(0.99, sum by (le, endpoint) (rate(http_request_duration_seconds_bucket{job=\"smart-warehouse-consumer\"}[1m])))", "legendFormat": "p99 {{endpoint}}"}
+      ]
     },
     {
       "type": "timeseries",
-      "title": "Throughput events/sec",
+      "title": "Producer p50/p95/p99 latency",
       "id": 2,
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.50, sum by (le, endpoint) (rate(http_request_duration_seconds_bucket{job=\"smart-warehouse-producer\"}[1m])))", "legendFormat": "p50 {{endpoint}}"},
+        {"expr": "histogram_quantile(0.95, sum by (le, endpoint) (rate(http_request_duration_seconds_bucket{job=\"smart-warehouse-producer\"}[1m])))", "legendFormat": "p95 {{endpoint}}"},
+        {"expr": "histogram_quantile(0.99, sum by (le, endpoint) (rate(http_request_duration_seconds_bucket{job=\"smart-warehouse-producer\"}[1m])))", "legendFormat": "p99 {{endpoint}}"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Throughput requests/sec",
+      "id": 3,
       "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "sum by (job, endpoint) (rate(http_requests_total[1m]))", "legendFormat": "{{job}} {{endpoint}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP errors/sec",
+      "id": 4,
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "targets": [{"expr": "sum by (job, endpoint, error_type) (rate(http_request_errors_total[1m]))", "legendFormat": "{{job}} {{endpoint}} {{error_type}}"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Domain events/sec",
+      "id": 5,
+      "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
       "targets": [{"expr": "sum by (event_type) (rate(events_processed_total[1m]))", "legendFormat": "{{event_type}}"}]
     },
     {
       "type": "timeseries",
-      "title": "Processing and Cassandra errors",
-      "id": 3,
-      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
-      "targets": [
-        {"expr": "sum by (error_code) (rate(events_failed_total[1m]))", "legendFormat": "dlq {{error_code}}"},
-        {"expr": "rate(cassandra_write_errors_total[1m])", "legendFormat": "cassandra write errors/sec"}
-      ]
+      "title": "Event processing p95",
+      "id": 6,
+      "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+      "targets": [{"expr": "histogram_quantile(0.95, sum by (le) (rate(event_processing_duration_seconds_bucket[1m])))", "legendFormat": "p95"}]
     }
   ]
 }

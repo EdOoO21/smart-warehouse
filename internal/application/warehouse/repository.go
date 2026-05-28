@@ -25,6 +25,7 @@ type Metrics interface {
 	IncProcessed(eventType string)
 	IncFailed(errorCode string)
 	ObserveDuration(seconds float64)
+	ObserveHTTPRequest(method, endpoint string, status int, seconds float64)
 	IncCassandraWriteError()
 	SetLag(partition int, lag int64)
 }

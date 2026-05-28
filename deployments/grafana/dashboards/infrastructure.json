@@ -1,0 +1,48 @@
+{
+  "uid": "smart-warehouse-infra",
+  "title": "Smart Warehouse Infrastructure",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Kafka brokers",
+      "id": 1,
+      "gridPos": {"x": 0, "y": 0, "w": 8, "h": 6},
+      "targets": [{"expr": "kafka_brokers", "legendFormat": "brokers"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Kafka consumer lag",
+      "id": 2,
+      "gridPos": {"x": 8, "y": 0, "w": 8, "h": 6},
+      "targets": [
+        {"expr": "consumer_lag", "legendFormat": "app partition {{partition}}"},
+        {"expr": "kafka_consumergroup_lag{consumergroup=\"warehouse-state-consumer\"}", "legendFormat": "exporter {{topic}}/{{partition}}"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Kafka partitions",
+      "id": 3,
+      "gridPos": {"x": 16, "y": 0, "w": 8, "h": 6},
+      "targets": [{"expr": "kafka_topic_partitions{topic=\"warehouse-events\"}", "legendFormat": "warehouse-events"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Cassandra write errors",
+      "id": 4,
+      "gridPos": {"x": 0, "y": 6, "w": 12, "h": 8},
+      "targets": [{"expr": "rate(cassandra_write_errors_total[1m])", "legendFormat": "write errors/sec"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Prometheus scrape health",
+      "id": 5,
+      "gridPos": {"x": 12, "y": 6, "w": 12, "h": 8},
+      "targets": [{"expr": "up", "legendFormat": "{{job}}"}]
+    }
+  ]
+}

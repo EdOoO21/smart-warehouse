@@ -24,6 +24,8 @@ func NewProducer(brokers []string, topic string, codec *AvroCodec) *Producer {
 			Balancer:               &kafka.Hash{},
 			RequiredAcks:           kafka.RequireAll,
 			AllowAutoTopicCreation: false,
+			BatchSize:              1,
+			BatchTimeout:           10 * time.Millisecond,
 		},
 		codec: codec,
 	}

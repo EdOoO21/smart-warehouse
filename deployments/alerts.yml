@@ -1,8 +1,36 @@
 groups:
   - name: smart-warehouse
     rules:
+      - alert: WarehouseTargetDown
+        expr: up{job=~"smart-warehouse-consumer|smart-warehouse-producer"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: Smart Warehouse service target is down
+
+      - alert: WarehouseHighHTTPErrorRate
+        expr: |
+          sum(rate(http_request_errors_total[1m]))
+          /
+          clamp_min(sum(rate(http_requests_total[1m])), 0.000001) > 0.05
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Smart Warehouse HTTP error rate is above 5%
+
+      - alert: WarehouseHighHTTPLatency
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[1m]))) > 1
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: Smart Warehouse p95 HTTP latency is above 1s
+
       - alert: WarehouseConsumerLagHigh
-        expr: consumer_lag > 5
+        expr: max(consumer_lag) > 5 or max(kafka_consumergroup_lag{consumergroup="warehouse-state-consumer"}) > 5
         for: 30s
         labels:
           severity: warning

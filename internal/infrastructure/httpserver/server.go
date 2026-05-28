@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"smart-warehouse/internal/domain"
 	"smart-warehouse/internal/infrastructure/kafka"
@@ -57,7 +58,7 @@ func New(addr string, logger *slog.Logger, registry *metrics.Registry, cassandra
 			w.WriteHeader(http.StatusAccepted)
 		})
 	}
-	return &Server{server: &http.Server{Addr: addr, Handler: logRequest(logger, mux)}}
+	return &Server{server: &http.Server{Addr: addr, Handler: logRequest(logger, registry, mux)}}
 }
 
 func (s *Server) Run() error {
@@ -71,9 +72,22 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
 }
 
-func logRequest(logger *slog.Logger, next http.Handler) http.Handler {
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(status int) {
+	r.status = status
+	r.ResponseWriter.WriteHeader(status)
+}
+
+func logRequest(logger *slog.Logger, registry *metrics.Registry, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, r)
-		logger.Debug("http request", "method", r.Method, "path", r.URL.Path)
+		start := time.Now()
+		recorder := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(recorder, r)
+		registry.ObserveHTTPRequest(r.Method, r.URL.Path, recorder.status, time.Since(start).Seconds())
+		logger.Debug("http request", "method", r.Method, "path", r.URL.Path, "status", recorder.status)
 	})
 }
