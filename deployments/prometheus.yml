@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 5s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: smart-warehouse-consumer
+    static_configs:
+      - targets: ["consumer:8080"]
+  - job_name: smart-warehouse-producer
+    static_configs:
+      - targets: ["wms-producer:8082"]
+  - job_name: kafka
+    static_configs:
+      - targets: ["kafka-exporter:9308"]
+  - job_name: prometheus
+    static_configs:
+      - targets: ["prometheus:9090"]
