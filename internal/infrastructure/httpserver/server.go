@@ -55,7 +55,12 @@ func New(addr string, logger *slog.Logger, registry *metrics.Registry, cassandra
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusAccepted)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"status":   "accepted",
+				"event_id": event.EventID,
+			})
 		})
 	}
 	return &Server{server: &http.Server{Addr: addr, Handler: logRequest(logger, registry, mux)}}
